@@ -1,0 +1,106 @@
+macro "Batch Merge LSW" {
+setBatchMode(true);
+Root_Directory = getDirectory("Raw Images");
+  
+    list1 = getFileList(Root_Directory);
+    //gets the list of files in the folder Raw
+    // Images must be named witout any spaces
+    n1 = lengthOf(list1);
+output = getDirectory("Output Folder");
+    listout = getFileList(output);
+        
+for(i =0; i<n1; i++) {
+//Loop for all Multi-Page TIF image files in the RAW-folder 
+path = Root_Directory + list1[i];
+    
+run("Bio-Formats Importer", "open=path autoscale color_mode=Composite rois_import=[ROI manager] view=Hyperstack stack_order=XYCZT series_1");
+//Opens the image in Hyperstacks composite mode, with max resolution.
+image =  getInfo("image.filename");
+dotIndex = indexOf(image, "." );
+imageWithoutExtension = substring(image, 0, dotIndex );
+run("Stack to Images");
+run("Brightness/Contrast...");
+resetMinAndMax();
+//Reset contrast and birghtness
+selectWindow(imageWithoutExtension + "-0007");
+resetMinAndMax();
+selectWindow(imageWithoutExtension + "-0006");
+resetMinAndMax();
+selectWindow(imageWithoutExtension + "-0005");
+resetMinAndMax();
+selectWindow(imageWithoutExtension + "-0004");
+resetMinAndMax();
+selectWindow(imageWithoutExtension + "-0003");
+resetMinAndMax();
+selectWindow(imageWithoutExtension + "-0002");
+resetMinAndMax();
+selectWindow(imageWithoutExtension + "-0001");
+resetMinAndMax();
+Image_Folder = output + imageWithoutExtension;
+File.makeDirectory(Image_Folder);
+//Creates folder for each RAW-file output
+name480 = imageWithoutExtension + "_480_raw.tif";
+name520 = imageWithoutExtension + "_520_raw.tif";
+name570 = imageWithoutExtension + "_570_raw.tif";
+name620 = imageWithoutExtension + "_620_raw.tif";
+name690 = imageWithoutExtension + "_690_raw.tif";
+name780 = imageWithoutExtension + "_780_raw.tif";
+nameDAPI = imageWithoutExtension + "_DAPI_raw.tif";
+nameMerge = imageWithoutExtension + "_Merge.tif";
+selectWindow(imageWithoutExtension + "-0001");
+saveAs("Tiff", Image_Folder + "/" + nameDAPI);
+selectWindow(imageWithoutExtension + "-0002");
+saveAs("Tiff", Image_Folder + "/" + name480);
+selectWindow(imageWithoutExtension + "-0003");
+saveAs("Tiff", Image_Folder  + "/"+ name520);
+selectWindow(imageWithoutExtension + "-0004");
+saveAs("Tiff", Image_Folder + "/" + name570);
+selectWindow(imageWithoutExtension + "-0005");
+saveAs("Tiff", Image_Folder  + "/"+ name620);
+selectWindow(imageWithoutExtension + "-0006");
+saveAs("Tiff", Image_Folder  + "/"+ name690);
+selectWindow(imageWithoutExtension + "-0007");
+saveAs("Tiff", Image_Folder  + "/"+ name780);
+//Saves all seperate image grey scales
+run("Merge Channels...", "c1=["+name570+"] c2=["+name520+"] c3=["+nameDAPI+"] c4=["+name620+"] c5=["+name690+"] c6=["+name780+"] c7=["+name480+"] create");
+//c1=Red, c2=Green, c3=Blue, c4=Grey/White, c5=Cyan, c6=Magenta, c7=Yellow
+//Change order if you want another color setup
+run("Flatten");
+run("Bio-Formats Exporter", "save=["+nameMerge+"] compression=LZW");
+saveAs("Tiff", Image_Folder + "/"+ nameMerge);
+//Saves colored merged image
+selectWindow("Composite");
+run("Stack to Images");
+name480export = Image_Folder + "/" + "["+imageWithoutExtension+"]" + "_480.tif";
+name520export = Image_Folder + "/" + "["+imageWithoutExtension+"]" + "_520.tif";
+name570export = Image_Folder + "/" + "["+imageWithoutExtension+"]" + "_570.tif";
+name620export = Image_Folder + "/" + "["+imageWithoutExtension+"]" + "_620.tif";
+name690export = Image_Folder + "/" + "["+imageWithoutExtension+"]" + "_690.tif";
+name780export = Image_Folder + "/" + "["+imageWithoutExtension+"]" + "_780.tif";
+nameDAPIexport = Image_Folder + "/" + "["+imageWithoutExtension+"]" + "_DAPI.tif";
+selectWindow("Composite-0001");
+run("Flatten");
+run("Bio-Formats Exporter", "save=["+name570export+"] compression=LZW");
+selectWindow("Composite-0002");
+run("Flatten");
+run("Bio-Formats Exporter", "save=["+name520export+"] compression=LZW");
+selectWindow("Composite-0003");
+run("Flatten");
+run("Bio-Formats Exporter", "save=["+nameDAPIexport+"] compression=LZW");
+selectWindow("Composite-0004");
+run("Flatten");
+run("Bio-Formats Exporter", "save=["+name620export+"] compression=LZW");
+selectWindow("Composite-0005");
+run("Flatten");
+run("Bio-Formats Exporter", "save=["+name690export+"] compression=LZW");
+selectWindow("Composite-0006");
+run("Flatten");
+run("Bio-Formats Exporter", "save=["+name780export+"] compression=LZW");
+selectWindow("Composite-0007");
+run("Flatten");
+run("Bio-Formats Exporter", "save=["+name480export+"] compression=LZW");
+//Saves all colored images
+close("*");
+    }
+print("["+n1+"]" + "images was processed Successfully!");
+}
